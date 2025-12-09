@@ -1,0 +1,170 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\title{Kermit-wave phenomena}
+\author{Loïc Lemieux-Crête}
+\date{December 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Modeling of Wave Phenomena}
+
+
+
+
+Wave phenomena play a central role in both physics and engineering, as they 
+provide a fundamental mechanism for energy transfer without net transport of 
+matter. Examples include acoustic propagation in air, stress waves in elastic 
+solids, and surface oscillations in fluids. In the context of simulation, waves 
+are also critical for modeling vibrational effects in robotics, resonances in 
+mechanical systems, and visually plausible deformations in computer graphics.
+
+In discretized systems composed of particles or dynamic units, wave-like 
+behavior can be represented in multiple ways. Traditionally, partial 
+differential equation (PDE) discretizations are employed, where local 
+interactions approximate continuous differential operators~\cite{macklin2014, 
+muller2003}. In contrast, this work also introduces a novel analytical 
+formulation in dual quaternion space, designed for direct compatibility with 
+rigid-body and pose-based representations~\cite{kavan2007, zhu2005}.
+
+
+\subsection{Scalar and Discrete Formulation}
+
+In a homogeneous isotropic medium, a linear harmonic wave is governed by the 
+classical scalar wave equation~\cite{courant1962}:
+\begin{equation}
+\frac{\partial^2 u}{\partial t^2} = c^2 \nabla^2 u,
+\end{equation}
+where $u(\mathbf{X},t)$ is the displacement field, $c$ the wave velocity, and 
+$\nabla^2$ the Laplacian operator.
+
+In particle-based discretizations, the Laplacian is typically approximated 
+through local neighborhood differences~\cite{gingold1977, liu2003}:
+\begin{equation}
+\nabla^2 u_i \approx \frac{1}{h^2} 
+\sum_{j \in \mathcal{N}(i)} (u_j - u_i),
+\end{equation}
+where $\mathcal{N}(i)$ denotes the neighborhood of particle $i$, and $h$ is the 
+characteristic spacing.
+
+A localized impulse may be expressed as a Gaussian-modulated sinusoid 
+\cite{morse1968}:
+\begin{equation}
+u_0(\mathbf{X}) = 
+A \exp\!\left(-\frac{\|\mathbf{X}-\mathbf{X}_0\|^2}{\sigma^2}\right)
+\sin\!\left(k\|\mathbf{X}-\mathbf{X}_0\| + \phi\right).
+\end{equation}
+
+Explicit numerical integration must satisfy the 
+Courant--Friedrichs--Lewy (CFL) condition~\cite{courant1928}:
+\begin{equation}
+\Delta t < C \frac{h}{c},
+\end{equation}
+with $C$ depending on the discretization scheme.
+
+While this PDE-based approach is physically faithful, it requires careful 
+spatial resolution and becomes computationally expensive for high-frequency or 
+high-dimensional simulations.
+
+
+\subsection{Dual Quaternion Wave Field (Proposed)}
+
+To extend wave modeling beyond scalar displacement fields, we define a wave 
+directly in dual quaternion space, enabling consistent perturbations of both 
+translations and rotations in $\mathrm{SE}(3)$. Let 
+$\hat{\xi} \in \mathbf{SE}(3)$ denote a unit dual twist (screw axis) 
+specifying the local displacement/rotation direction. The resulting wave field is:
+\begin{equation}
+Q(\mathbf{X},t) = 
+Q_0(\mathbf{X}) \otimes 
+\exp\!\big( \beta(\mathbf{X},t)\, \hat{\xi} \big),
+\end{equation}
+where $Q_0(\mathbf{X})$ is the undeformed pose field and $\exp$ the dual 
+quaternion exponential.
+
+The scalar modulation factor $\beta(\mathbf{X},t)$ encodes the physical wave parameters:
+\begin{equation}
+\beta(\mathbf{X},t) =
+\frac{A}{\rho}
+e^{- v t}
+\sin\!\left( k (\hat{n} \cdot \mathbf{X}) - \omega t + \phi \right).
+\end{equation}
+
+Here:
+\begin{itemize}
+    \item $A$ is the wave amplitude,
+    \item $\rho$ is the local density,
+    \item $v$ is viscosity/damping,
+    \item $k = 2\pi/\lambda$ is the wave number,
+    \item $\omega = 2\pi f$ is the angular frequency,
+    \item $\phi$ is the initial phase,
+    \item $\hat n$ is the propagation direction,
+    \item $\hat \xi$ is the screw axis coupling rotation and translation.
+\end{itemize}
+
+This construction captures the physical behavior of the medium while lifting 
+the oscillation into $\mathrm{SE}(3)$ via the exponential map.
+
+
+\subsubsection{Eulerian Incremental Alternative}
+
+For world-space propagation, an incremental update is:
+\begin{equation}
+Q_{t+\Delta t} = 
+Q_t \otimes 
+\exp\!\big( \Delta t\, \gamma(Q_t,t) \hat{\xi} \big),
+\end{equation}
+with $\gamma$ evaluated at the current pose.
+
+Stability requires a CFL-like bound ensuring that wave propagation speed does 
+not exceed the spatial discretization scale.
+
+
+\subsection{Discussion}
+
+This dual quaternion wave field differs fundamentally from Laplacian-based PDE 
+methods. Instead of approximating differential operators through neighbor 
+interactions, the field is expressed analytically and mapped directly onto the 
+Lie group $\mathrm{SE}(3)$.
+
+Advantages include:
+\begin{itemize}
+    \item consistent translation/rotation coupling via $\hat{\xi}$,
+    \item incorporation of physical material factors in $\beta$,
+    \item compatibility with both Lagrangian and Eulerian interpretations,
+    \item lightweight evaluation without PDE solvers,
+    \item geometric coherence for robotics and animation tasks.
+\end{itemize}
+
+
+\subsection{Related Work}
+
+Wave phenomena are traditionally modeled using PDEs in Euclidean space, such as 
+the scalar and vector wave equations. Numerical approaches include finite 
+difference (FDTD), finite element (FEM), and particle-based schemes including 
+SPH and MPM. These methods approximate energy transport through local 
+interactions but come with significant computational and stability demands.
+
+Dual quaternions have become a standard tool for representing rigid-body motion 
+in robotics and computer graphics~\cite{kavan2007}. While Lie-group integrators 
+have been applied to dynamics on $\mathrm{SO}(3)$ and $\mathrm{SE}(3)$, prior 
+work does not treat wave propagation in dual quaternion space. Procedural 
+oscillation methods exist in graphics, but they operate in $\mathbf{R}^3$ 
+without leveraging screw transformations or embedding physical parameters such 
+as density or damping.
+
+To our knowledge, no previous formulation defines a wave field directly in dual 
+quaternion space. The proposed method offers a geometrically coherent, 
+physically meaningful, and computationally lightweight alternative to PDE-based 
+wave solvers for robotics and animation.
+
+%Sets the bibliography style to UNSRT and imports the 
+%bibliography file "sample.bib".
+
+\bibliographystyle{unsrt}
+\bibliography{sample}
+
+\end{document}
+
