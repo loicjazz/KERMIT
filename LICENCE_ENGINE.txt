@@ -1,1 +1,18 @@
+KERMIT Engine – Proprietary License
 
+Copyright (c) 2025 Loïc Lemieux-Crête  
+All rights reserved.
+
+The KERMIT engine source code, binaries, assets, solvers, GPU kernels, and all
+associated implementation details are proprietary and confidential.
+
+You MAY NOT:
+- Copy, modify, or redistribute the engine or any portion of its implementation
+- Create derivative works or competing physics engines based on the KERMIT implementation
+- Use the source code or binaries in commercial or non-commercial projects
+- Reverse-engineer, decompile, or disassemble any part of the engine
+
+Theoretical descriptions of the system may be published for academic reference,
+but the implementation remains fully proprietary.
+
+For licensing or collaboration inquiries, contact the author directly.
